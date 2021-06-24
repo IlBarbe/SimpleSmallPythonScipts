@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 #import necessary components
 # Python program to create 
 import pandas as pd 
