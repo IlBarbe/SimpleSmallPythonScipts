@@ -1,0 +1,226 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+#import file tkinter package for graphical interface
+#import necessary components# Python program to create
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
+import matplotlib.ticker as mticker
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import scale, normalize
+get_ipython().run_line_magic('matplotlib', 'inline')
+import pandas as pd 
+from datetime import datetime, date
+from tkinter import *
+from tkinter import filedialog 
+
+# Function for opening the  
+# file explorer window 
+def browseFiles(): 
+    #set df as global variable
+    global filename
+    global df
+    filename = filedialog.askopenfilename(initialdir = "/", 
+                                          title = "Select a File", 
+                                          filetypes = (("Text files", 
+                                                        "*.txt*"), 
+                                                       ("all files", 
+                                                        "*.*"))) 
+    df=pd.read_table(filename, index_col=0)
+    # Change label contents 
+    label_file_explorer.configure(text="File Opened: "+filename) 
+    
+def ttle():
+    
+    global ttle
+    ttle = ttle_entry.get()
+
+# Create the root window 
+window = Tk()
+
+# Set window title 
+window.title('File Explorer') 
+   
+# Set window size 
+window.geometry("500x400") 
+   
+#Set window background color 
+window.config(background = "white") 
+   
+# Create a File Explorer label 
+label_file_explorer = Label(window,  
+                            text = "Select your file", font=40,
+                            width = 40, height = 2,  
+                            fg = "blue") 
+   
+       
+button_explore = Button(window,  
+                        text = "Browse Files",font=40, 
+                        command = browseFiles) 
+
+#creation of df for the example 
+
+xmpl={"Factor1":["Value 1","Value 2","...","Value n"],
+      "Factor2":["Value 1","Value 2","...","Value n"],
+      "...":["...","...","...","..."],
+      "FactorN":["Value N","Value N","...","Value N"]}
+xmpl_ndx=["Sample1","Sample2","...","SampleN"]
+
+xmpl_df=pd.DataFrame(xmpl,columns=["Factor1","Factor2","...","FactorN"], index=xmpl_ndx)
+
+
+confirm_ttle = Button(window,  
+                     text = "Confirm TITLE", font=40, 
+                     command = ttle)
+
+button_exit = Button(window,  
+                     text = "DONE", font=40, 
+                     command = window.destroy)
+
+info_label = Label(window,
+                  text= "FILE TABLE GUIDELINES",
+                  width =40, height = 2,
+                  fg="red",font=40)
+
+info_label1 = Label(window,
+                  text= xmpl_df,
+                  width =50, height = 6,
+                  fg="black")
+
+ttle_entry = Entry(window, bd=5)
+
+#set widget grid and tools position
+label_file_explorer.grid(column = 1, row = 1) 
+   
+button_explore.grid(column = 1, row = 2)
+
+ttle_entry.grid(column=1,row=3)
+confirm_ttle.grid(column=1,row=4)
+
+info_label.grid(column = 1, row=5)
+info_label1.grid(column = 1, row=6)
+
+button_exit.grid(column=1,row=7)
+# Let the window wait for any events 
+window.mainloop()
+
+
+# In[2]:
+
+
+#Store traits and print them to verify
+traits=list(df.columns)
+print(traits)
+
+
+# In[3]:
+
+
+acp = PCA(n_components=2,svd_solver="full")
+ds= df
+
+scaler = StandardScaler()
+X = scaler.fit_transform(ds)
+cols = list(df.columns.values)  
+rows = list(df.index.values)
+coord = acp.fit_transform(X)
+
+PC=acp.fit_transform(X)
+newX= pd.DataFrame(data=PC, columns=["PC1","PC2"], index=rows)
+
+
+# In[4]:
+
+
+#Print the two components in a table
+print(newX)
+
+
+# In[5]:
+
+
+#Print the shape of the pricipal components
+
+import matplotlib.ticker as mticker 
+figura,ax = plt.subplots(figsize=(5,5))
+
+
+
+ax.plot(newX.iloc[:,0], label="PC1")
+ax.plot(newX.iloc[:,1], label="PC2")
+
+ax.legend(fontsize=20)
+plt.xlabel('Days after DRNS')
+plt.gca().xaxis.set_major_locator(mticker.MultipleLocator(2)) #impostare cifre significative asse x
+saving1=ttle+"_component_shepe.png"
+plt.savefig(saving1, dpi=500, format='png')
+
+for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+             ax.get_xticklabels() + ax.get_yticklabels()):
+    item.set_fontsize(20)
+
+plt.show()
+
+
+# In[7]:
+
+
+per_var = np.round(acp.explained_variance_ratio_ * 100, decimals=1)
+
+PC1perc="PC1"+": "+str(per_var[0])+"%"
+PC2perc="PC2"+": "+str(per_var[1])+"%"
+
+
+# In[8]:
+
+
+plt.figure(figsize = (10,5))
+plt.xticks(rotation=0)
+plt.bar(x=range(1, len(per_var)+1), height=per_var, tick_label=[PC1perc,PC2perc]) #["PC1","PC2"]
+plt.ylabel('percentange of explained variance')
+plt.xlabel('principal component')
+plt.show()
+saving1=ttle+"_component_histogram.png"
+plt.savefig(saving1, dpi=500, format='png')
+
+
+# In[9]:
+
+
+lM=int(np.amax(coord))+((np.amax(coord))/5)
+lm=int(np.amin(coord))+((np.amin(coord))/5)
+
+fig=plt.figure(figsize=(20,20))  
+ax=fig.add_subplot(1,1,1) 
+plt.plot([lm,lM],[0,0],color='silver',linestyle='-',linewidth=2)
+plt.plot([0,0],[lm,lM],color='silver',linestyle='-',linewidth=2)
+ax.set_xlabel(PC1perc,fontsize = 45)  
+ax.set_ylabel(PC2perc,fontsize = 45)
+ax.invert_xaxis() #flip axis
+
+
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+
+for axis in ['top','bottom','left','right']:
+
+    ax.spines[axis].set_linewidth(3)
+    ax.spines[axis].set_color("black")
+    ax.spines[axis].set_zorder(0)
+
+#ax.text(4, 6, , style='italic',)
+plt.title(ttle, fontdict=None, loc='center', pad=None,size=50)
+for i in range(len(rows)):
+    plt.annotate(newX.index[i],(coord[i,0],coord[i,1]),size=30)
+ax.grid()
+
+#just for saving the plot
+saving=ttle+".png"
+
+plt.savefig(saving, dpi=500, format='png')
+
